@@ -14,7 +14,7 @@ class Date
 {
 
     const FORMAT = 'yyyy-MM-dd';
-    const REGEX = '/^\d{4,4}-\d{2,2}-\d{2,2}$/';
+    const REGEX = '/^\d{4,4}-\d{2,2}-\d{2,2}(T\d{2,2}:\d{2,2}:\d{2,2}Z)?$/';
 
     protected $_date = null;
 
