@@ -1,12 +1,13 @@
 {
-    "name": "sirprize/basecamp",
+    "name": "hemmerich/basecamp",
     "type": "library",
     "description": "Basecamp Classic API Wrapper for PHP 5.3+",
     "keywords": ["basecamp", "basecamp classic", "api"],
-    "homepage": "https://github.com/sirprize/basecamp",
+    "homepage": "https://github.com/hemmerich/basecamp",
     "license": "MIT",
     "authors": [
-        { "name": "Christian Hoegl", "email": "chrigu@sirprize.me" }
+        { "name": "Christian Hoegl", "email": "chrigu@sirprize.me" },
+        { "name": "Daniel Hemmerich", "email": "daniel@webpagefx.com" }
     ],
     "autoload": {
         "psr-0": { "": "lib/" }
