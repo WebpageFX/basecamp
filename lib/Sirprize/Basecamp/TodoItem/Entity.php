@@ -315,7 +315,7 @@ class Entity
      * @throws \Sirprize\Basecamp\Exception
      * @return boolean
      */
-    public function create()
+    public function create($comment)
     {
         if($this->getTodoListId() === null)
         {
@@ -334,6 +334,18 @@ class Entity
                 ->setRawData($xml)
                 ->request('POST')
             ;
+            if ($comment)
+            {
+                $xml2 = '<comment><body>' . htmlspecialchars($comment) . '</body></comment>';
+                $response2 = $this->_getHttpClient()
+                    ->setUri($response->getHeader('Location') . "/comments.xml")
+                    ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                    ->setHeaders('Content-type', 'application/xml')
+                    ->setHeaders('Accept', 'application/xml')
+                    ->setRawData($xml2)
+                    ->request('POST')
+                ;
+            }
         }
         catch(\Exception $exception)
         {
