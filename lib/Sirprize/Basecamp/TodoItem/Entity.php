@@ -42,6 +42,7 @@ class Entity
     protected $_observers = array();
     protected $_responsiblePartyId = null;
     protected $_notify = false;
+    protected $_attachments = array();
 
     public function setService(Service $service)
     {
@@ -323,6 +324,7 @@ class Entity
         }
 
         $todoListId = $this->getTodoListId();
+
         $xml = $this->getXml();
 
         try {
@@ -334,9 +336,20 @@ class Entity
                 ->setRawData($xml)
                 ->request('POST')
             ;
+
             if ($comment)
             {
-                $xml2 = '<comment><body>' . htmlspecialchars($comment) . '</body></comment>';
+
+                $attachments_xml = '';
+                if (count($this->_attachments) > 0) {
+
+                    foreach ($this->_attachments as $uploadId => $fname) {
+                        // Yes there are 2 file tags
+                        $attachments_xml .= '<attachments><file><original_filename>'.htmlspecialchars($fname).'</original_filename><file>'.$uploadId.'</file></file></attachments>';
+                    }
+                }
+
+                $xml2 = '<comment><body>' . htmlspecialchars($comment) . '</body>' . $attachments_xml . '</comment>';
                 $response2 = $this->_getHttpClient()
                     ->setUri($response->getHeader('Location') . "/comments.xml")
                     ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
@@ -373,6 +386,86 @@ class Entity
         $this->_onCreateSuccess();
         return true;
     }
+
+
+    //
+    // This is used to upload a file to Basecamp so that we can later
+    // attach it to a comment.
+    //
+    // It's passed a full path to a file, and then returns the basecamp ID
+    // for that particular upload
+    //
+    // Example:
+    //
+    //    $uploadEntity = new TodoItemEntity();
+    //    $uploadEntity->setService($this->basecampService)
+    //                 ->setHttpClient(new \Zend_Http_Client());
+    //
+    //    $fileID = $uploadItem->uploadFile($file);
+    //
+    public function uploadFile($file)
+    {
+
+        // Get the name of the file (minus the directory path)
+        $fname = basename($file);
+
+        //
+        // Upload the file via a POST
+        //
+        try {
+            $response = $this->_getHttpClient()
+                ->setUri($this->_getService()->getBaseUri()."/upload")
+                ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                ->setFileUpload($file,'name')
+                ->request('POST')
+            ;
+        }
+        catch(\Exception $exception)
+        {
+            try {
+                // connection error - try again
+                $response = $this->_getHttpClient()->request('POST');
+            }
+            catch(\Exception $exception)
+            {
+                $this->_onCreateError();
+
+                throw new Exception($exception->getMessage());
+            }
+        }
+
+        $this->_response = new Response($response);
+
+        if($this->_response->isError())
+        {
+            return false;
+        }
+
+
+        // The call must have been successful. We should have got back something like this:
+        //
+        //  SimpleXMLElement Object
+        //  (
+        //      [id] => 5733c35b1dab6357219c8ae45820aa0c0010
+        //  )
+        //
+        // This will parse the xml into a datastructure we can use
+        $data = $this->_response->getData();
+
+        // I got some strange behavior when working with the id, so I'm casting
+        // to a string so it's easier to work with.
+        return ((string) $data->id);
+    }
+
+    // We'll use an array indexed by fileID to define the attachments for this
+    // particular TodoItem object. Later when 'create' is called, it will loop
+    // through this array to build XML that associates the fileIDs with the new Todo item.
+    function setAttachments ($attachments = []) {
+        foreach ($attachments as $id => $filename) {
+            $this->_attachments[$id] = $filename;
+        }
+    }
+
 
     /**
      * Update this todo-item in storage
