@@ -19,52 +19,52 @@ class Stout extends Abstrakt
 
     public function onCompleteSuccess(Entity $todoItem)
     {
-        print $this->_getOnCompleteSuccessMessage($todoItem)."\n";
+//        print $this->_getOnCompleteSuccessMessage($todoItem)."\n";
     }
 
     public function onUncompleteSuccess(Entity $todoItem)
     {
-        print $this->_getOnUncompleteSuccessMessage($todoItem)."\n";
+//        print $this->_getOnUncompleteSuccessMessage($todoItem)."\n";
     }
 
     public function onCreateSuccess(Entity $todoItem)
     {
-        print $this->_getOnCreateSuccessMessage($todoItem)."\n";
+//        print $this->_getOnCreateSuccessMessage($todoItem)."\n";
     }
 
     public function onUpdateSuccess(Entity $todoItem)
     {
-        print $this->_getOnUpdateSuccessMessage($todoItem)."\n";
+//        print $this->_getOnUpdateSuccessMessage($todoItem)."\n";
     }
 
     public function onDeleteSuccess(Entity $todoItem)
     {
-        print $this->_getOnDeleteSuccessMessage($todoItem)."\n";
+//        print $this->_getOnDeleteSuccessMessage($todoItem)."\n";
     }
 
     public function onCompleteError(Entity $todoItem)
     {
-        print $this->_getOnCompleteErrorMessage($todoItem)."\n";
+//        print $this->_getOnCompleteErrorMessage($todoItem)."\n";
     }
 
     public function onUncompleteError(Entity $todoItem)
     {
-        print $this->_getOnUncompleteErrorMessage($todoItem)."\n";
+//        print $this->_getOnUncompleteErrorMessage($todoItem)."\n";
     }
 
     public function onCreateError(Entity $todoItem)
     {
-        print $this->_getOnCreateErrorMessage($todoItem)."\n";
+//        print $this->_getOnCreateErrorMessage($todoItem)."\n";
     }
 
     public function onUpdateError(Entity $todoItem)
     {
-        print $this->_getOnUpdateErrorMessage($todoItem)."\n";
+//        print $this->_getOnUpdateErrorMessage($todoItem)."\n";
     }
 
     public function onDeleteError(Entity $todoItem)
     {
-        print $this->_getOnDeleteErrorMessage($todoItem)."\n";
+//        print $this->_getOnDeleteErrorMessage($todoItem)."\n";
     }
 
 }
