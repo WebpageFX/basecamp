@@ -519,6 +519,76 @@ class Entity
         return true;
     }
 
+
+// REORDER
+
+    /**
+     * Re-order todoList Items
+     *
+     * @throws \Sirprize\Basecamp\Exception
+     * @return boolean
+     */
+    public function reorder($todo_items)
+    {
+        $id = $this->getId();
+
+        //
+        // Build the XML payload
+        //
+        $xml = '<todo-items type="array">'."\n";
+
+        foreach ($todo_items as $todoItemId) {
+            $xml .= "  <todo-item><id>$todoItemId</id></todo-item>\n";
+        }
+
+        $xml .= '</todo-items>';
+
+        //
+        // POST /todo_lists/#{todo_list_id}/todo_items/reorder.xml
+        //
+        // We should get back a '200' response
+        //
+        try {
+            $response = $this->_getHttpClient()
+                ->setUri($this->_getService()->getBaseUri()."/todo_lists/$id/todo_items/reorder.xml")
+                ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                ->setHeaders('Content-type', 'application/xml')
+                ->setHeaders('Accept', 'application/xml')
+                ->setRawData($xml)
+                ->request('POST')
+            ;
+        }
+        catch(\Exception $exception)
+        {
+            try {
+                // connection error - try again
+                $response = $this->_getHttpClient()->request('POST');
+            }
+            catch(\Exception $exception)
+            {
+                $this->_onCreateError();
+
+                throw new Exception($exception->getMessage());
+            }
+        }
+
+        $this->_response = new Response($response);
+
+        if($this->_response->isError())
+        {
+            // service error
+            $this->_onCreateError();
+            return false;
+        }
+
+        $this->_loaded = true;
+//        $this->_onReorderSuccess();
+        return true;
+    }
+
+
+// REORDER
+
     protected function _getService()
     {
         if($this->_service === null)

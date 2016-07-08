@@ -309,7 +309,8 @@ class Collection extends \SplObjectStorage
         }
 
         $this->load($this->_response->getData());
-        $this->_onStartSuccess();
+// This line below is creating output like "started todoList collection. found 1 todoLists"
+//        $this->_onStartSuccess();
         $this->rewind();
         return $this->current();
     }
