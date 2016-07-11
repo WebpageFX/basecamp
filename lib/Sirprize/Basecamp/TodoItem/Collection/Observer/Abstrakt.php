@@ -21,12 +21,12 @@ abstract class Abstrakt
 
     protected function _getOnStartSuccessMessage(Collection $collection)
     {
-        return "started todo-item collection. found ".$collection->count()." todo-items";
+//        return "started todo-item collection. found ".$collection->count()." todo-items";
     }
 
     protected function _getOnStartErrorMessage(Collection $collection)
     {
-        return "todo-item collection could not be started";
+//        return "todo-item collection could not be started";
     }
 
 }
