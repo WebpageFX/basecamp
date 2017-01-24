@@ -100,7 +100,7 @@ class Service
     {
         if($this->_httpClient === null)
         {
-            $this->_httpClient = new \Zend_Http_Client();
+            $this->_httpClient = new \Zend_Http_Client( null, array('timeout' => 30) );
         }
 
         return $this->_httpClient;
