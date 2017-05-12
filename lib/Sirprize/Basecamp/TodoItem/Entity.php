@@ -25,6 +25,7 @@ class Entity
     const _COMPLETED = 'completed';
     const _CONTENT = 'content';
     const _CREATED_AT = 'created-at';
+    const _COMPLETED_AT = 'completed-at';
     const _CREATOR_ID = 'creator-id';
     const _DUE_AT = 'due-at';
     const _ID = 'id';
@@ -161,6 +162,11 @@ class Entity
         return $this->_getVal(self::_CREATED_AT);
     }
 
+    public function getCompletedAt()
+    {
+        return $this->_getVal(self::_COMPLETED_AT);
+    }
+
     /**
      * @return \Sirprize\Basecamp\Id
      */
@@ -251,6 +257,11 @@ class Entity
         }
 
         $completed = ($array[self::_COMPLETED] == 'true');
+        if(isset($array[self::_COMPLETED_AT]))
+            $completed_at = $array[self::_COMPLETED_AT];
+        else
+            $completed_at = NULL;
+
         $dueAt = null;
 
         if($array[self::_DUE_AT])
@@ -264,6 +275,7 @@ class Entity
             self::_COMPLETED => $completed,
             self::_CONTENT => $array[self::_CONTENT],
             self::_CREATED_AT => $array[self::_CREATED_AT],
+            self::_COMPLETED_AT => $completed_at,
             self::_CREATOR_ID => $creatorId,
             self::_DUE_AT => $dueAt,
             self::_ID => $id,
