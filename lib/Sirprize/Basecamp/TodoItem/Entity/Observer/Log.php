@@ -56,6 +56,11 @@ class Log extends Abstrakt
         $this->_getLog()->info($this->_getOnUpdateSuccessMessage($todoItem));
     }
 
+    public function onCommentAddSuccess(Entity $todoItem)
+    {
+        $this->_getLog()->info($this->_getOnCommentAddSuccessMessage($todoItem));
+    }
+
     public function onDeleteSuccess(Entity $todoItem)
     {
         $this->_getLog()->info($this->_getOnDeleteSuccessMessage($todoItem));
@@ -79,6 +84,11 @@ class Log extends Abstrakt
     public function onUpdateError(Entity $todoItem)
     {
         $this->_getLog()->err($this->_getOnUpdateErrorMessage($todoItem));
+    }
+
+    public function onCommentAddError(Entity $todoItem)
+    {
+        $this->_getLog()->err($this->_getOnCommentAddErrorMessage($todoItem));
     }
 
     public function onDeleteError(Entity $todoItem)
