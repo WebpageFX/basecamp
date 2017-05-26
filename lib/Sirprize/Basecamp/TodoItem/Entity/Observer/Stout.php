@@ -37,6 +37,11 @@ class Stout extends Abstrakt
 //        print $this->_getOnUpdateSuccessMessage($todoItem)."\n";
     }
 
+    public function onCommentAddSuccess(Entity $todoItem)
+    {
+//        print $this->_getOnCommentAddSuccessMessage($todoItem)."\n";
+    }
+
     public function onDeleteSuccess(Entity $todoItem)
     {
 //        print $this->_getOnDeleteSuccessMessage($todoItem)."\n";
@@ -60,6 +65,11 @@ class Stout extends Abstrakt
     public function onUpdateError(Entity $todoItem)
     {
 //        print $this->_getOnUpdateErrorMessage($todoItem)."\n";
+    }
+
+    public function onCommentAddError(Entity $todoItem)
+    {
+//        print $this->_getOnCommentAddErrorMessage($todoItem)."\n";
     }
 
     public function onDeleteError(Entity $todoItem)
