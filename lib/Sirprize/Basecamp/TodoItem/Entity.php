@@ -535,6 +535,56 @@ class Entity
     }
 
     /**
+     * Gets recent comments
+     *
+     * @throws \Sirprize\Basecamp\Exception
+     * @return boolean
+     */
+    public function getComments()
+    {
+        if(!$this->_loaded)
+        {
+            throw new Exception('call load() before '.__METHOD__);
+        }
+
+        $id = $this->getId();
+        try {
+                $response = $this->_getHttpClient()
+                    ->setUri($this->_getService()->getBaseUri() . "/todo_items/$id/comments.xml")
+                    ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                    ->setHeaders('Content-type', 'application/xml')
+                    ->setHeaders('Accept', 'application/xml')
+                    ->request('GET')
+                ;
+        }
+        catch(\Exception $exception)
+        {
+            try {
+                // connection error - try again
+                $response = $this->_getHttpClient()->request('GET');
+            }
+            catch(\Exception $exception)
+            {
+                $this->_onCommentsGetError();
+
+                throw new Exception($exception->getMessage());
+            }
+        }
+
+        $this->_response = new Response($response);
+
+        if($this->_response->isError())
+        {
+            // service error
+            $this->_onCommentsGetError();
+            return false;
+        }
+
+        $this->_onCommentsGetSuccess();
+        return $this->_response->getData();
+    }
+
+    /**
      * Add a comment
      *
      * @throws \Sirprize\Basecamp\Exception
@@ -801,6 +851,14 @@ class Entity
         }
     }
 
+    protected function _onCommentsGetSuccess()
+    {
+        foreach($this->_observers as $observer)
+        {
+            $observer->onCommentsGetSuccess($this);
+        }
+    }
+
     protected function _onDeleteSuccess()
     {
         foreach($this->_observers as $observer)
@@ -846,6 +904,14 @@ class Entity
         foreach($this->_observers as $observer)
         {
             $observer->onCommentAddError($this);
+        }
+    }
+
+    protected function _onCommentsGetError()
+    {
+        foreach($this->_observers as $observer)
+        {
+            $observer->onCommentsGetError($this);
         }
     }
 

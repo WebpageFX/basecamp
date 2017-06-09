@@ -21,6 +21,7 @@ abstract class Abstrakt
     abstract public function onCreateSuccess(Entity $todoItem);
     abstract public function onUpdateSuccess(Entity $todoItem);
     abstract public function onCommentAddSuccess(Entity $todoItem);
+    abstract public function onCommentsGetSuccess(Entity $todoItem);
     abstract public function onDeleteSuccess(Entity $todoItem);
 
     abstract public function onCompleteError(Entity $todoItem);
@@ -28,6 +29,7 @@ abstract class Abstrakt
     abstract public function onCreateError(Entity $todoItem);
     abstract public function onUpdateError(Entity $todoItem);
     abstract public function onCommentAddError(Entity $todoItem);
+    abstract public function onCommentsGetError(Entity $todoItem);
     abstract public function onDeleteError(Entity $todoItem);
 
     protected function _getOnCompleteSuccessMessage(Entity $todoItem)
@@ -62,6 +64,13 @@ abstract class Abstrakt
     {
         $message  = "todo-item '".$todoItem->getContent()."'";
         $message .= " comment added in todo-list '".$todoItem->getId()."'";
+        return $message;
+    }
+
+    protected function _getOnCommentsGetSuccessMessage(Entity $todoItem)
+    {
+        $message  = "todo-item '".$todoItem->getContent()."'";
+        $message .= " comments found in todo-list '".$todoItem->getId()."'";
         return $message;
     }
 
@@ -104,6 +113,13 @@ abstract class Abstrakt
     {
         $message  = "todo-item '".$todoItem->getContent()."'";
         $message .= " could not add comment for todo-item '".$todoItem->getId()."'";
+        return $message;
+    }
+
+    protected function _getOnCommentsGetErrorMessage(Entity $todoItem)
+    {
+        $message  = "todo-item '".$todoItem->getContent()."'";
+        $message .= " could not find comments for todo-item '".$todoItem->getId()."'";
         return $message;
     }
 
