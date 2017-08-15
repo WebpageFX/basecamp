@@ -112,7 +112,7 @@ class Entity
         return $this;
     }
 
-    public function setResponsiblePartyId(Id $responsiblePartyId)
+    public function setResponsiblePartyId(Id $responsiblePartyId = NULL)
     {
         $this->_responsiblePartyId = $responsiblePartyId;
         return $this;
@@ -310,6 +310,8 @@ class Entity
             $xml .= '<responsible-party>'.$this->_responsiblePartyId.'</responsible-party>';
             if($this->_notify) { $xml .= '<notify>true</notify>'; }
         }
+        else
+            $xml .= '<responsible-party></responsible-party>';
 
         if($this->getDueAt() !== null)
         {
