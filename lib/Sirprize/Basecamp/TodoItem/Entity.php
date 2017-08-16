@@ -318,6 +318,11 @@ class Entity
             $xml .= '<due-at>'.$this->getDueAt().'</due-at>';
         }
 
+        if ($this->_TODOLIST_ID !== null)
+        {
+                $xml .= '<todo-list-id type="integer">' . $this->_TODOLIST_ID . '</todo-list-id>';
+        }
+        
         $xml .= '</todo-item>';
         return $xml;
     }
