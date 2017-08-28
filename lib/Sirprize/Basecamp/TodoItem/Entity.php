@@ -26,6 +26,7 @@ class Entity
     const _CONTENT = 'content';
     const _CREATED_AT = 'created-at';
     const _COMPLETED_AT = 'completed-at';
+    const _COMPLETER_ID = 'completer-id';
     const _CREATOR_ID = 'creator-id';
     const _DUE_AT = 'due-at';
     const _ID = 'id';
@@ -167,6 +168,11 @@ class Entity
         return $this->_getVal(self::_COMPLETED_AT);
     }
 
+    public function getCompleterId()
+    {
+        return $this->_getVal(self::_COMPLETER_ID);
+    }
+
     /**
      * @return \Sirprize\Basecamp\Id
      */
@@ -262,6 +268,11 @@ class Entity
         else
             $completed_at = NULL;
 
+        if(isset($array[self::_COMPLETER_ID]))
+            $completer_id = $array[self::_COMPLETER_ID];
+        else
+            $completer_id = NULL;
+
         $dueAt = null;
 
         if($array[self::_DUE_AT])
@@ -276,6 +287,7 @@ class Entity
             self::_CONTENT => $array[self::_CONTENT],
             self::_CREATED_AT => $array[self::_CREATED_AT],
             self::_COMPLETED_AT => $completed_at,
+            self::_COMPLETER_ID => $completer_id,
             self::_CREATOR_ID => $creatorId,
             self::_DUE_AT => $dueAt,
             self::_ID => $id,
@@ -318,7 +330,7 @@ class Entity
             $xml .= '<due-at>'.$this->getDueAt().'</due-at>';
         }
 
-        $xml .= '</todo-item>';
+		$xml .= '</todo-item>';
         return $xml;
     }
 
