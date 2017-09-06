@@ -610,8 +610,15 @@ class Entity
         {
             throw new Exception('call load() before '.__METHOD__);
         }
+		$attachments_xml = '';
+		if (count($this->_attachments) > 0) {
 
-        $xml = '<comment><body>' . htmlspecialchars($comment) . '</body></comment>';
+			foreach ($this->_attachments as $uploadId => $fname) {
+				// Yes there are 2 file tags
+				$attachments_xml .= '<attachments><file><original_filename>'.htmlspecialchars($fname).'</original_filename><file>'.$uploadId.'</file></file></attachments>';
+			}
+		}
+        $xml = '<comment><body>' . htmlspecialchars($comment) . '</body>' . $attachments_xml . '</comment>';
         $id = $this->getId();
         try {
                 $response = $this->_getHttpClient()
