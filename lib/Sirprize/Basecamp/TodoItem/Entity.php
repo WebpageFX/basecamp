@@ -657,6 +657,109 @@ class Entity
         return true;
     }
 
+    //gets tagged users from page content
+    public function getCommentTagged()
+    {
+        if(!$this->_loaded)
+        {
+            throw new Exception('call load() before '.__METHOD__);
+        }
+        $id = $this->getId();
+        try {
+                $response = $this->_getHttpClient()
+                    ->setUri($this->_getService()->getBaseUri() . "/todo_items/$id/comments")
+                    ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                    ->request('GET')
+                ;
+                $body = $response->getBody();
+                $subscribers = $this->getContents($body,"  <input checked=\"checked\" id=\"notify-","\" name=\"notify[]\" type=\"checkbox\" value=\"");
+                return $subscribers;
+        }
+        catch(\Exception $e)
+        {
+            \Zend\Debug\Debug::dump($e->getMessage());
+            throw new Exception($e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * adds raw comment with tagged parties; comment must not be empty or all whitespace
+     *
+     * expects array of party ids to assign
+     * @throws \Sirprize\Basecamp\Exception
+     * @return boolean
+     */
+    public function addCommentTagged($comment, $party_ids)
+    {
+        if(!$this->_loaded)
+        {  
+            throw new Exception('call load() before '.__METHOD__);
+        }
+
+        $id = $this->getId();
+        try {   
+            //always include at least one party; fx projects in this case
+            array_push($party_ids,11332601);
+            $all_pids = array_merge(array(0),$party_ids);
+            $data = array(
+                'comment[body]' => $comment,
+                'notify[]' => $all_pids,
+                'commit' => 'Add this comment',
+            );
+            $raw = 'utf8=%E2%9C%93&authenticity_token=Wn4eObu0bePwMBiBrcM7w4W5PkmbNUti1tiVVBcU03Y%3D&comment%5Buse_textile%5D=true&basic_uploader=true';
+            foreach($data as $dkey => $dval)
+            {   
+                if($dkey == 'notify[]')
+                {   
+                    foreach($dval as $nval)
+                    {   
+                        if($raw != '')
+                            $raw .= '&';
+                        $raw .= urlencode($dkey).'='.urlencode($nval);
+                    }
+                }
+                else
+                {   
+                    if($raw != '')
+                        $raw .= '&';
+                    $raw .= urlencode($dkey).'='.urlencode($dval);
+                }
+            }
+            //                $this->setHttpClient(new \Zend_Http_Client(null,array('timeout'=>30)));
+            $response = $this->_getHttpClient()
+                ->setUri($this->_getService()->getBaseUri() . "/todo_items/$id/comments")
+                ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                ->setHeaders('Content-type', NULL)
+                ->setHeaders('Accept', NULL)
+                ->setRawData($raw)
+                ->request('POST')
+                ;
+            $xml_comments = $this->getComments();
+            if($xml_comments == false)
+                return false;
+            $comments = (array) $xml_comments;
+            $last_comment = array_pop($comments['comment']);
+            $created_at = new \DateTime($last_comment->{'created-at'});
+            $now = new \DateTime();
+            if($created_at >= $now->modify('-2 minutes'))
+            {
+                return $last_comment->{'id'};
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+        catch(\Exception $exception)
+        {
+            throw new Exception($exception->getMessage());
+            return false;
+        }
+
+    }
+
     /**
      * Delete this todo-item from storage
      *
@@ -805,6 +908,24 @@ class Entity
 
         $this->_onUncompleteSuccess();
         return true;
+    }
+
+    private function getContents($str, $startDelimiter, $endDelimiter) {
+        $contents = array();
+        $startDelimiterLength = strlen($startDelimiter);
+        $endDelimiterLength = strlen($endDelimiter);
+        $startFrom = $contentStart = $contentEnd = 0;
+        while (false !== ($contentStart = strpos($str, $startDelimiter, $startFrom))) {
+            $contentStart += $startDelimiterLength;
+            $contentEnd = strpos($str, $endDelimiter, $contentStart);
+            if (false === $contentEnd) {
+                break;
+            }
+            $contents[] = substr($str, $contentStart, $contentEnd - $contentStart);
+            $startFrom = $contentEnd + $endDelimiterLength;
+        }
+
+        return $contents;
     }
 
     protected function _getService()
