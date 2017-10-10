@@ -669,6 +669,8 @@ class Entity
                 $response = $this->_getHttpClient()
                     ->setUri($this->_getService()->getBaseUri() . "/todo_items/$id/comments")
                     ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+					->setHeaders('Content-type', NULL)
+					->setHeaders('Accept', NULL)
                     ->request('GET')
                 ;
                 $body = $response->getBody();
