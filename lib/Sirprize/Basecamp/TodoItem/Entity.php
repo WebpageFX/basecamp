@@ -746,7 +746,7 @@ class Entity
             $now = new \DateTime();
             if($created_at >= $now->modify('-2 minutes'))
             {
-                return $last_comment->{'id'};
+                return (int) $last_comment->{'id'};
             }
             else
             {
@@ -760,6 +760,54 @@ class Entity
             return false;
         }
 
+    }
+
+    /**
+     * Update a comment
+     *
+     * @throws \Sirprize\Basecamp\Exception
+     * @return boolean
+     */
+    public function updateComment($id, $comment)
+    {
+        if(!$this->_loaded)
+        {
+            throw new Exception('call load() before '.__METHOD__);
+        }
+		$attachments_xml = '';
+		if (count($this->_attachments) > 0) {
+
+			foreach ($this->_attachments as $uploadId => $fname) {
+				// Yes there are 2 file tags
+				$attachments_xml .= '<attachments><file><original_filename>'.htmlspecialchars($fname).'</original_filename><file>'.$uploadId.'</file></file></attachments>';
+			}
+		}
+        $xml = '<comment><body>' . htmlspecialchars($comment) . '</body>' . $attachments_xml . '</comment>';
+//        $id = $this->getId();
+        try {
+                $response = $this->_getHttpClient()
+                    ->setUri($this->_getService()->getBaseUri() . "/comments/$id.xml")
+                    ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                    ->setHeaders('Content-type', 'application/xml')
+                    ->setHeaders('Accept', 'application/xml')
+                    ->setRawData($xml)
+                    ->request('PUT')
+                ;
+        }
+        catch(\Exception $exception)
+        {
+            throw new Exception($exception->getMessage());
+        }
+
+        $this->_response = new Response($response);
+
+        if($this->_response->isError())
+        {
+            // service error
+            return false;
+        }
+
+        return true;
     }
 
     /**
