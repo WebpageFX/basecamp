@@ -217,6 +217,7 @@ class Entity
             throw new Exception('entity has already been loaded');
         }
 
+        $this->_onLoadSuccess($xml->asXML());
         #print_r($xml); exit;
         $this->_loaded = true;
         $array = (array) $xml;
@@ -608,6 +609,14 @@ class Entity
         foreach($this->_observers as $observer)
         {
             $observer->onCreateSuccess($this);
+        }
+    }
+
+    protected function _onLoadSuccess($xmlstring)
+    {
+        foreach($this->_observers as $observer)
+        {
+            $observer->onLoadSuccess($xmlstring);
         }
     }
 

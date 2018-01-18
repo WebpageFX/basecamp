@@ -19,6 +19,7 @@ abstract class Abstrakt
     abstract public function onCompleteSuccess(Entity $milestone);
     abstract public function onUncompleteSuccess(Entity $milestone);
     abstract public function onCreateSuccess(Entity $milestone);
+    abstract public function onLoadSuccess($xmlstring);
     abstract public function onUpdateSuccess(Entity $milestone);
     abstract public function onDeleteSuccess(Entity $milestone);
 
@@ -30,70 +31,76 @@ abstract class Abstrakt
 
     protected function _getOnCompleteSuccessMessage(Entity $milestone)
     {
-        $message  = "milestone '".$milestone->getTitle()."'";
+        $message  = "milestone '".$milestone->getId()."'";
         $message .= " completed in project '".$milestone->getProjectId()."'";
         return $message;
     }
 
     protected function _getOnUncompleteSuccessMessage(Entity $milestone)
     {
-        $message  = "milestone '".$milestone->getTitle()."'";
+        $message  = "milestone '".$milestone->getId()."'";
         $message .= " uncompleted in project '".$milestone->getProjectId()."'";
         return $message;
     }
 
     protected function _getOnCreateSuccessMessage(Entity $milestone)
     {
-        $message  = "milestone '".$milestone->getTitle()."'";
+        $message  = "milestone '".$milestone->getId()."'";
         $message .= " created in project '".$milestone->getProjectId()."'";
+        return $message;
+    }
+
+    protected function _getOnLoadSuccessMessage($xmlstring)
+    {
+        $message  = "milestone '".$xmlstring."'";
         return $message;
     }
 
     protected function _getOnUpdateSuccessMessage(Entity $milestone)
     {
-        $message  = "milestone '".$milestone->getTitle()."'";
+        $message  = "milestone '".$milestone->getId()."'";
         $message .= " updated in project '".$milestone->getProjectId()."'";
         return $message;
     }
 
     protected function _getOnDeleteSuccessMessage(Entity $milestone)
     {
-        $message  = "milestone '".$milestone->getTitle()."'";
+        $message  = "milestone '".$milestone->getId()."'";
         $message .= " deleted from project '".$milestone->getProjectId()."'";
         return $message;
     }
 
     protected function _getOnCompleteErrorMessage(Entity $milestone)
     {
-        $message  = "milestone '".$milestone->getTitle()."'";
+        $message  = "milestone '".$milestone->getId()."'";
         $message .= " could not be completed in project '".$milestone->getProjectId()."'";
         return $message;
     }
 
     protected function _getOnUncompleteErrorMessage(Entity $milestone)
     {
-        $message  = "milestone '".$milestone->getTitle()."'";
+        $message  = "milestone '".$milestone->getId()."'";
         $message .= " could not be uncompleted in project '".$milestone->getProjectId()."'";
         return $message;
     }
 
     protected function _getOnCreateErrorMessage(Entity $milestone)
     {
-        $message  = "milestone '".$milestone->getTitle()."'";
+        $message  = "milestone '".$milestone->getId()."'";
         $message .= " could not be created in project '".$milestone->getProjectId()."'";
         return $message;
     }
 
     protected function _getOnUpdateErrorMessage(Entity $milestone)
     {
-        $message  = "milestone '".$milestone->getTitle()."'";
+        $message  = "milestone '".$milestone->getId()."'";
         $message .= " could not be updated in project '".$milestone->getProjectId()."'";
         return $message;
     }
 
     protected function _getOnDeleteErrorMessage(Entity $milestone)
     {
-        $message  = "milestone '".$milestone->getTitle()."'";
+        $message  = "milestone '".$milestone->getId()."'";
         $message .= " could not be deleted from project '".$milestone->getProjectId()."'";
         return $message;
     }
