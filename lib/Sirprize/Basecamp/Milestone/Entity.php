@@ -27,6 +27,8 @@ class Entity
     const _COMMENTS_COUNT = 'comments-count';
     const _COMPLETED = 'completed';
     const _CREATED_ON = 'created-on';
+    const _COMPLETED_AT = 'completed-at';
+    const _COMPLETER_ID = 'completer-id';
     const _CREATOR_ID = 'creator-id';
     const _PROJECT_ID = 'project-id';
     const _RESPONSIBLE_PARTY_ID = 'responsible-party-id';
@@ -170,6 +172,16 @@ class Entity
         return $this->_getVal(self::_CREATED_ON);
     }
 
+    public function getCompletedAt()
+    {
+        return $this->_getVal(self::_COMPLETED_AT);
+    }
+
+    public function getCompleterId()
+    {
+        return $this->_getVal(self::_COMPLETER_ID);
+    }
+
     /**
      * @return \Sirprize\Basecamp\Id
      */
@@ -230,6 +242,15 @@ class Entity
         $responsiblePartyId = new Id($array[self::_RESPONSIBLE_PARTY_ID]);
 
         $completed = ($array[self::_COMPLETED] == 'true');
+        if(isset($array[self::_COMPLETED_AT]))
+            $completed_at = $array[self::_COMPLETED_AT];
+        else
+            $completed_at = NULL;
+
+        if(isset($array[self::_COMPLETER_ID]))
+            $completer_id = $array[self::_COMPLETER_ID];
+        else
+            $completer_id = NULL;
         $wantsNotification = ($array[self::_WANTS_NOTIFICATION] == 'true');
 
         $this->_data = array(
@@ -238,6 +259,8 @@ class Entity
             self::_DEADLINE => $deadline,
             self::_COMMENTS_COUNT => $array[self::_COMMENTS_COUNT],
             self::_COMPLETED => $completed,
+            self::_COMPLETED_AT => $completed_at,
+            self::_COMPLETER_ID => $completer_id,
             self::_CREATED_ON => $array[self::_CREATED_ON],
             self::_CREATOR_ID => $creatorId,
             self::_PROJECT_ID => $projectId,
