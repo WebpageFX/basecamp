@@ -582,7 +582,7 @@ class Entity
         }
 
         $this->_loaded = true;
-//        $this->_onReorderSuccess();
+        $this->_onUpdateSuccess();
         return true;
     }
 
