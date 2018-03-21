@@ -143,6 +143,12 @@ class Entity
         return $this;
     }
 
+    public function setPosition($position)
+    {
+        $this->_data[self::_POSITION] = $position;
+        return $this;
+    }
+
     public function getCommentsCount()
     {
         return $this->_getVal(self::_COMMENTS_COUNT);
