@@ -350,7 +350,7 @@ class Entity
      * @throws \Sirprize\Basecamp\Exception
      * @return boolean
      */
-    public function create($comment)
+    public function create($comment = false)
     {
         if($this->getTodoListId() === null)
         {
