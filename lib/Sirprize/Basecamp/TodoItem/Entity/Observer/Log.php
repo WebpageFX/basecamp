@@ -51,6 +51,11 @@ class Log extends Abstrakt
         $this->_getLog()->info($this->_getOnCreateSuccessMessage($todoItem));
     }
 
+    public function onLoadSuccess($xmlstring)
+    {
+        $this->_getLog()->info($this->_getOnLoadSuccessMessage($xmlstring));
+    }
+
     public function onUpdateSuccess(Entity $todoItem)
     {
         $this->_getLog()->info($this->_getOnUpdateSuccessMessage($todoItem));

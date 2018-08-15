@@ -26,6 +26,7 @@ class Entity
     const _CONTENT = 'content';
     const _CREATED_AT = 'created-at';
     const _COMPLETED_AT = 'completed-at';
+    const _COMPLETER_ID = 'completer-id';
     const _CREATOR_ID = 'creator-id';
     const _DUE_AT = 'due-at';
     const _ID = 'id';
@@ -142,6 +143,12 @@ class Entity
         return $this;
     }
 
+    public function setPosition($position)
+    {
+        $this->_data[self::_POSITION] = $position;
+        return $this;
+    }
+
     public function getCommentsCount()
     {
         return $this->_getVal(self::_COMMENTS_COUNT);
@@ -165,6 +172,11 @@ class Entity
     public function getCompletedAt()
     {
         return $this->_getVal(self::_COMPLETED_AT);
+    }
+
+    public function getCompleterId()
+    {
+        return $this->_getVal(self::_COMPLETER_ID);
     }
 
     /**
@@ -235,6 +247,8 @@ class Entity
             throw new Exception('entity has already been loaded');
         }
 
+        $this->_onLoadSuccess($xml->asXML());
+//        echo $xml->asXML();die;
         #print_r($xml); exit;
         $this->_loaded = true;
         $array = (array) $xml;
@@ -262,6 +276,11 @@ class Entity
         else
             $completed_at = NULL;
 
+        if(isset($array[self::_COMPLETER_ID]))
+            $completer_id = $array[self::_COMPLETER_ID];
+        else
+            $completer_id = NULL;
+
         $dueAt = null;
 
         if($array[self::_DUE_AT])
@@ -276,6 +295,7 @@ class Entity
             self::_CONTENT => $array[self::_CONTENT],
             self::_CREATED_AT => $array[self::_CREATED_AT],
             self::_COMPLETED_AT => $completed_at,
+            self::_COMPLETER_ID => $completer_id,
             self::_CREATOR_ID => $creatorId,
             self::_DUE_AT => $dueAt,
             self::_ID => $id,
@@ -318,7 +338,7 @@ class Entity
             $xml .= '<due-at>'.$this->getDueAt().'</due-at>';
         }
 
-        $xml .= '</todo-item>';
+		$xml .= '</todo-item>';
         return $xml;
     }
 
@@ -598,8 +618,15 @@ class Entity
         {
             throw new Exception('call load() before '.__METHOD__);
         }
+		$attachments_xml = '';
+		if (count($this->_attachments) > 0) {
 
-        $xml = '<comment><body>' . htmlspecialchars($comment) . '</body></comment>';
+			foreach ($this->_attachments as $uploadId => $fname) {
+				// Yes there are 2 file tags
+				$attachments_xml .= '<attachments><file><original_filename>'.htmlspecialchars($fname).'</original_filename><file>'.$uploadId.'</file></file></attachments>';
+			}
+		}
+        $xml = '<comment><body>' . htmlspecialchars($comment) . '</body>' . $attachments_xml . '</comment>';
         $id = $this->getId();
         try {
                 $response = $this->_getHttpClient()
@@ -635,6 +662,159 @@ class Entity
         }
 
         $this->_onCommentAddSuccess();
+        return true;
+    }
+
+    //gets tagged users from page content
+    public function getCommentTagged()
+    {
+        if(!$this->_loaded)
+        {
+            throw new Exception('call load() before '.__METHOD__);
+        }
+        $id = $this->getId();
+        try {
+                $response = $this->_getHttpClient()
+                    ->setUri($this->_getService()->getBaseUri() . "/todo_items/$id/comments")
+                    ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+					->setHeaders('Content-type', NULL)
+					->setHeaders('Accept', NULL)
+                    ->request('GET')
+                ;
+                $body = $response->getBody();
+                $subscribers = $this->getContents($body,"  <input checked=\"checked\" id=\"notify-","\" name=\"notify[]\" type=\"checkbox\" value=\"");
+                return $subscribers;
+        }
+        catch(\Exception $e)
+        {
+            \Zend\Debug\Debug::dump($e->getMessage());
+            throw new Exception($e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * adds raw comment with tagged parties; comment must not be empty or all whitespace
+     *
+     * expects array of party ids to assign
+     * @throws \Sirprize\Basecamp\Exception
+     * @return boolean
+     */
+    public function addCommentTagged($comment, $party_ids)
+    {
+        if(!$this->_loaded)
+        {  
+            throw new Exception('call load() before '.__METHOD__);
+        }
+
+        $id = $this->getId();
+        try {   
+            //always include at least one party; fx projects in this case
+            array_push($party_ids,11332601);
+            $all_pids = array_merge(array(0),$party_ids);
+            $data = array(
+                'comment[body]' => $comment,
+                'notify[]' => $all_pids,
+                'commit' => 'Add this comment',
+            );
+            $raw = 'utf8=%E2%9C%93&authenticity_token=Wn4eObu0bePwMBiBrcM7w4W5PkmbNUti1tiVVBcU03Y%3D&comment%5Buse_textile%5D=true&basic_uploader=true';
+            foreach($data as $dkey => $dval)
+            {   
+                if($dkey == 'notify[]')
+                {   
+                    foreach($dval as $nval)
+                    {   
+                        if($raw != '')
+                            $raw .= '&';
+                        $raw .= urlencode($dkey).'='.urlencode($nval);
+                    }
+                }
+                else
+                {   
+                    if($raw != '')
+                        $raw .= '&';
+                    $raw .= urlencode($dkey).'='.urlencode($dval);
+                }
+            }
+            //                $this->setHttpClient(new \Zend_Http_Client(null,array('timeout'=>30)));
+            $response = $this->_getHttpClient()
+                ->setUri($this->_getService()->getBaseUri() . "/todo_items/$id/comments")
+                ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                ->setHeaders('Content-type', NULL)
+                ->setHeaders('Accept', NULL)
+                ->setRawData($raw)
+                ->request('POST')
+                ;
+            $xml_comments = $this->getComments();
+            if($xml_comments == false)
+                return false;
+            $comments = (array) $xml_comments;
+            $last_comment = array_pop($comments['comment']);
+            $created_at = new \DateTime($last_comment->{'created-at'});
+            $now = new \DateTime();
+            if($created_at >= $now->modify('-2 minutes'))
+            {
+                return (int) $last_comment->{'id'};
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+        catch(\Exception $exception)
+        {
+            throw new Exception($exception->getMessage());
+            return false;
+        }
+
+    }
+
+    /**
+     * Update a comment
+     *
+     * @throws \Sirprize\Basecamp\Exception
+     * @return boolean
+     */
+    public function updateComment($id, $comment)
+    {
+        if(!$this->_loaded)
+        {
+            throw new Exception('call load() before '.__METHOD__);
+        }
+		$attachments_xml = '';
+		if (count($this->_attachments) > 0) {
+
+			foreach ($this->_attachments as $uploadId => $fname) {
+				// Yes there are 2 file tags
+				$attachments_xml .= '<attachments><file><original_filename>'.htmlspecialchars($fname).'</original_filename><file>'.$uploadId.'</file></file></attachments>';
+			}
+		}
+        $xml = '<comment><body>' . htmlspecialchars($comment) . '</body>' . $attachments_xml . '</comment>';
+//        $id = $this->getId();
+        try {
+                $response = $this->_getHttpClient()
+                    ->setUri($this->_getService()->getBaseUri() . "/comments/$id.xml")
+                    ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                    ->setHeaders('Content-type', 'application/xml')
+                    ->setHeaders('Accept', 'application/xml')
+                    ->setRawData($xml)
+                    ->request('PUT')
+                ;
+        }
+        catch(\Exception $exception)
+        {
+            throw new Exception($exception->getMessage());
+        }
+
+        $this->_response = new Response($response);
+
+        if($this->_response->isError())
+        {
+            // service error
+            return false;
+        }
+
         return true;
     }
 
@@ -788,6 +968,24 @@ class Entity
         return true;
     }
 
+    private function getContents($str, $startDelimiter, $endDelimiter) {
+        $contents = array();
+        $startDelimiterLength = strlen($startDelimiter);
+        $endDelimiterLength = strlen($endDelimiter);
+        $startFrom = $contentStart = $contentEnd = 0;
+        while (false !== ($contentStart = strpos($str, $startDelimiter, $startFrom))) {
+            $contentStart += $startDelimiterLength;
+            $contentEnd = strpos($str, $endDelimiter, $contentStart);
+            if (false === $contentEnd) {
+                break;
+            }
+            $contents[] = substr($str, $contentStart, $contentEnd - $contentStart);
+            $startFrom = $contentEnd + $endDelimiterLength;
+        }
+
+        return $contents;
+    }
+
     protected function _getService()
     {
         if($this->_service === null)
@@ -834,6 +1032,14 @@ class Entity
         foreach($this->_observers as $observer)
         {
             $observer->onCreateSuccess($this);
+        }
+    }
+
+    protected function _onLoadSuccess($xmlstring)
+    {
+        foreach($this->_observers as $observer)
+        {
+            $observer->onLoadSuccess($xmlstring);
         }
     }
 

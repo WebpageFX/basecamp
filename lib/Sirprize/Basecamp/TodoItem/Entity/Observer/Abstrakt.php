@@ -19,6 +19,7 @@ abstract class Abstrakt
     abstract public function onCompleteSuccess(Entity $todoItem);
     abstract public function onUncompleteSuccess(Entity $todoItem);
     abstract public function onCreateSuccess(Entity $todoItem);
+    abstract public function onLoadSuccess($xmlstring);
     abstract public function onUpdateSuccess(Entity $todoItem);
     abstract public function onCommentAddSuccess(Entity $todoItem);
     abstract public function onCommentsGetSuccess(Entity $todoItem);
@@ -34,98 +35,104 @@ abstract class Abstrakt
 
     protected function _getOnCompleteSuccessMessage(Entity $todoItem)
     {
-        $message  = "todo-item '".$todoItem->getContent()."'";
+        $message  = "todo-item '".$todoItem->getId()."'";
         $message .= " completed in todo-list '".$todoItem->getTodoListId()."'";
         return $message;
     }
 
     protected function _getOnUncompleteSuccessMessage(Entity $todoItem)
     {
-        $message  = "todo-item '".$todoItem->getContent()."'";
+        $message  = "todo-item '".$todoItem->getId()."'";
         $message .= " uncompleted in todo-list '".$todoItem->getTodoListId()."'";
         return $message;
     }
 
     protected function _getOnCreateSuccessMessage(Entity $todoItem)
     {
-        $message  = "todo-item '".$todoItem->getContent()."'";
+        $message  = "todo-item '".$todoItem->getId()."'";
         $message .= " created in todo-list '".$todoItem->getTodoListId()."'";
+        return $message;
+    }
+
+    protected function _getOnLoadSuccessMessage($xmlstring)
+    {
+        $message  = "LOADED '".$xmlstring."'";
         return $message;
     }
 
     protected function _getOnUpdateSuccessMessage(Entity $todoItem)
     {
-        $message  = "todo-item '".$todoItem->getContent()."'";
+        $message  = "todo-item '".$todoItem->getId()."'";
         $message .= " updated in todo-list '".$todoItem->getTodoListId()."'";
         return $message;
     }
 
     protected function _getOnCommentAddSuccessMessage(Entity $todoItem)
     {
-        $message  = "todo-item '".$todoItem->getContent()."'";
+        $message  = "todo-item '".$todoItem->getId()."'";
         $message .= " comment added in todo-list '".$todoItem->getId()."'";
         return $message;
     }
 
     protected function _getOnCommentsGetSuccessMessage(Entity $todoItem)
     {
-        $message  = "todo-item '".$todoItem->getContent()."'";
+        $message  = "todo-item '".$todoItem->getId()."'";
         $message .= " comments found in todo-list '".$todoItem->getId()."'";
         return $message;
     }
 
     protected function _getOnDeleteSuccessMessage(Entity $todoItem)
     {
-        $message  = "todo-item '".$todoItem->getContent()."'";
+        $message  = "todo-item '".$todoItem->getId()."'";
         $message .= " deleted from todo-list '".$todoItem->getTodoListId()."'";
         return $message;
     }
 
     protected function _getOnCompleteErrorMessage(Entity $todoItem)
     {
-        $message  = "todo-item '".$todoItem->getContent()."'";
+        $message  = "todo-item '".$todoItem->getId()."'";
         $message .= " could not be completed in todo-list '".$todoItem->getTodoListId()."'";
         return $message;
     }
 
     protected function _getOnUncompleteErrorMessage(Entity $todoItem)
     {
-        $message  = "todo-item '".$todoItem->getContent()."'";
+        $message  = "todo-item '".$todoItem->getId()."'";
         $message .= " could not be uncompleted in todo-list '".$todoItem->getTodoListId()."'";
         return $message;
     }
 
     protected function _getOnCreateErrorMessage(Entity $todoItem)
     {
-        $message  = "todo-item '".$todoItem->getContent()."'";
+        $message  = "todo-item '".$todoItem->getId()."'";
         $message .= " could not be created in todo-list '".$todoItem->getTodoListId()."'";
         return $message;
     }
 
     protected function _getOnUpdateErrorMessage(Entity $todoItem)
     {
-        $message  = "todo-item '".$todoItem->getContent()."'";
+        $message  = "todo-item '".$todoItem->getId()."'";
         $message .= " could not be updated in todo-list '".$todoItem->getTodoListId()."'";
         return $message;
     }
 
     protected function _getOnCommentAddErrorMessage(Entity $todoItem)
     {
-        $message  = "todo-item '".$todoItem->getContent()."'";
+        $message  = "todo-item '".$todoItem->getId()."'";
         $message .= " could not add comment for todo-item '".$todoItem->getId()."'";
         return $message;
     }
 
     protected function _getOnCommentsGetErrorMessage(Entity $todoItem)
     {
-        $message  = "todo-item '".$todoItem->getContent()."'";
+        $message  = "todo-item '".$todoItem->getId()."'";
         $message .= " could not find comments for todo-item '".$todoItem->getId()."'";
         return $message;
     }
 
     protected function _getOnDeleteErrorMessage(Entity $todoItem)
     {
-        $message  = "todo-item '".$todoItem->getContent()."'";
+        $message  = "todo-item '".$todoItem->getId()."'";
         $message .= " could not be deleted from todo-list '".$todoItem->getTodoListId()."'";
         return $message;
     }

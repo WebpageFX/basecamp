@@ -32,6 +32,11 @@ class Stout extends Abstrakt
 //        print $this->_getOnCreateSuccessMessage($todoItem)."\n";
     }
 
+    public function onLoadSuccess($xmlstring)
+    {
+//        print $this->_getOnLoadSuccessMessage($todoItem)."\n";
+    }
+
     public function onUpdateSuccess(Entity $todoItem)
     {
 //        print $this->_getOnUpdateSuccessMessage($todoItem)."\n";

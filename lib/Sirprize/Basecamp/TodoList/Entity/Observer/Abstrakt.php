@@ -26,42 +26,42 @@ abstract class Abstrakt
 
     protected function _getOnCreateSuccessMessage(Entity $todoList)
     {
-        $message  = "todoList '".$todoList->getName()."'";
+        $message  = "todoList '".$todoList->getId()."'";
         $message .= " created in project '".$todoList->getProjectId()."'";
         return $message;
     }
 
     protected function _getOnUpdateSuccessMessage(Entity $todoList)
     {
-        $message  = "todoList '".$todoList->getName()."'";
+        $message  = "todoList '".$todoList->getId()."'";
         $message .= " updated in project '".$todoList->getProjectId()."'";
         return $message;
     }
 
     protected function _getOnDeleteSuccessMessage(Entity $todoList)
     {
-        $message  = "todoList '".$todoList->getName()."'";
+        $message  = "todoList '".$todoList->getId()."'";
         $message .= " deleted from project '".$todoList->getProjectId()."'";
         return $message;
     }
 
     protected function _getOnCreateErrorMessage(Entity $todoList)
     {
-        $message  = "todoList '".$todoList->getName()."'";
+        $message  = "todoList '".$todoList->getId()."'";
         $message .= " could not be created in project '".$todoList->getProjectId()."'";
         return $message;
     }
 
     protected function _getOnUpdateErrorMessage(Entity $todoList)
     {
-        $message  = "todoList '".$todoList->getName()."'";
+        $message  = "todoList '".$todoList->getId()."'";
         $message .= " could not be updated in project '".$todoList->getProjectId()."'";
         return $message;
     }
 
     protected function _getOnDeleteErrorMessage(Entity $todoList)
     {
-        $message  = "todoList '".$todoList->getName()."'";
+        $message  = "todoList '".$todoList->getId()."'";
         $message .= " could not be deleted from project '".$todoList->getProjectId()."'";
         return $message;
     }

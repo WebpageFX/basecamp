@@ -234,6 +234,90 @@ class Collection extends \SplObjectStorage
         return $this->current();
     }
 
+
+    /**
+     * Fetch todo-item by id
+     *
+     * @throws \Sirprize\Basecamp\Exception
+     * @return null|Entity
+     */
+    public function startBycommentId(Id $id, $force = false)
+    {
+        if($this->_started && !$force)
+        {
+            return $this;
+        }
+
+        $this->_started = true;
+
+        try {
+            $response = $this->_getHttpClient()
+                ->setUri($this->_getService()->getBaseUri()."/comments/$id.xml")
+                ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                ->request('GET')
+            ;
+        }
+        catch(\Exception $exception)
+        {
+            try {
+                // connection error - try again
+                $response = $this->_getHttpClient()->request('GET');
+            }
+            catch(\Exception $exception)
+            {
+                $this->_onStartError();
+
+                throw new Exception($exception->getMessage());
+            }
+        }
+
+        $this->_response = new Response($response);
+        $data = $this->_response->getData();
+        $array_data = (array) $data;
+        $id = new Id($array_data['commentable-id']);
+
+        if($this->_response->isError())
+        {
+            // service error
+            $this->_onStartError();
+            return null;
+        }
+        try {
+            $response = $this->_getHttpClient()
+                ->setUri($this->_getService()->getBaseUri()."/todo_items/$id.xml")
+                ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                ->request('GET')
+            ;
+        }
+        catch(\Exception $exception)
+        {
+            try {
+                // connection error - try again
+                $response = $this->_getHttpClient()->request('GET');
+            }
+            catch(\Exception $exception)
+            {
+                $this->_onStartError();
+
+                throw new Exception($exception->getMessage());
+            }
+        }
+
+        $this->_response = new Response($response);
+
+        if($this->_response->isError())
+        {
+            // service error
+            $this->_onStartError();
+            return null;
+        }
+
+        $this->load($this->_response->getData(), $force);
+        $this->_onStartSuccess();
+        $this->rewind();
+        return $this->current();
+    }
+
     /**
      * Instantiate todo-item objects with api response data
      *
