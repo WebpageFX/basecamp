@@ -22,6 +22,9 @@ use Sirprize\Basecamp\Cli\TodoList\Collection as TodoListCollection;
 use Sirprize\Basecamp\TodoItem\Collection\Observer\Stout as TodoItemStout;
 use Sirprize\Basecamp\TodoItem\Collection\Observer\Log as TodoItemLog;
 use Sirprize\Basecamp\Cli\TodoItem\Collection as TodoItemCollection;
+use Sirprize\Basecamp\Message\Collection\Observer\Stout as MessageStout;
+use Sirprize\Basecamp\Message\Collection\Observer\Log as MessageLog;
+use Sirprize\Basecamp\Cli\Message\Collection as MessageCollection;
 
 class Cli extends Service
 {
@@ -114,6 +117,24 @@ class Cli extends Service
             ->attachObserver($todoItemsObserverLog)
         ;
         return $todoItems;
+    }
+
+    public function getMessagesInstance()
+    {
+        $messagesObserverStout = new MessageStout();
+
+        $messagesObserverLog = new MessageLog();
+        $messagesObserverLog->setLog($this->_getLog());
+
+        $messages = new MessageCollection();
+        $messages
+            ->setService($this)
+            ->setHttpClient($this->_getHttpClient())
+            ->setLog($this->_getLog())
+            ->attachObserver($messagesObserverStout)
+            ->attachObserver($messagesObserverLog)
+        ;
+        return $messages;
     }
 
 }

@@ -18,6 +18,7 @@ use Sirprize\Basecamp\Comment\Collection as CommentCollection;
 use Sirprize\Basecamp\Attachment\Collection as AttachmentCollection;
 use Sirprize\Basecamp\TodoList\Collection as TodoListCollection;
 use Sirprize\Basecamp\TodoItem\Collection as TodoItemCollection;
+use Sirprize\Basecamp\Message\Collection as MessageCollection;
 
 class Service
 {
@@ -114,6 +115,16 @@ class Service
             ->setHttpClient($this->_getHttpClient())
         ;
         return $projects;
+    }
+
+    public function getMessagesInstance()
+    {
+        $messages = new MessageCollection();
+        $messages
+            ->setService($this)
+            ->setHttpClient($this->_getHttpClient())
+        ;
+        return $messages;
     }
 
     public function getTimeEntriesInstance()
