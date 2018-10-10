@@ -172,12 +172,15 @@ class Collection extends \SplObjectStorage
                 ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
                 ->request('GET')
             ;
+            $this->_response = new Response($response);
         }
         catch(\Exception $exception)
         {
             try {
                 // connection error - try again
+                sleep(15);
                 $response = $this->_getHttpClient()->request('GET');
+                $this->_response = new Response($response);
             }
             catch(\Exception $exception)
             {
@@ -187,7 +190,6 @@ class Collection extends \SplObjectStorage
             }
         }
 
-        $this->_response = new Response($response);
 
         if($this->_response->isError())
         {
@@ -234,12 +236,15 @@ class Collection extends \SplObjectStorage
                 ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
                 ->request('GET')
             ;
+            $this->_response = new Response($response);
         }
         catch(\Exception $exception)
         {
             try {
                 // connection error - try again
+                sleep(15);
                 $response = $this->_getHttpClient()->request('GET');
+                $this->_response = new Response($response);
             }
             catch(\Exception $exception)
             {
@@ -249,7 +254,6 @@ class Collection extends \SplObjectStorage
             }
         }
 
-        $this->_response = new Response($response);
 
         if($this->_response->isError())
         {
@@ -284,12 +288,15 @@ class Collection extends \SplObjectStorage
                 ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
                 ->request('GET')
             ;
+            $this->_response = new Response($response);
         }
         catch(\Exception $exception)
         {
             try {
                 // connection error - try again
+                sleep(15);
                 $response = $this->_getHttpClient()->request('GET');
+                $this->_response = new Response($response);
             }
             catch(\Exception $exception)
             {
@@ -299,7 +306,6 @@ class Collection extends \SplObjectStorage
             }
         }
 
-        $this->_response = new Response($response);
 
         if($this->_response->isError())
         {

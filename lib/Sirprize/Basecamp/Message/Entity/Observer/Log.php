@@ -50,4 +50,24 @@ class Log extends Abstrakt
     {
         $this->_getLog()->err($this->_getOnCommentsGetErrorMessage($message));
     }
+
+    public function onCreateSuccess(Entity $message)
+    {
+        $this->_getLog()->info($this->_getOnCreateSuccessMessage($message));
+    }
+
+    public function onCommentAddSuccess(Entity $message)
+    {
+        $this->_getLog()->info($this->_getOnCommentAddSuccessMessage($message));
+    }
+
+    public function onCreateError(Entity $message)
+    {
+        $this->_getLog()->err($this->_getOnCreateErrorMessage($message));
+    }
+
+    public function onCommentAddError(Entity $message)
+    {
+        $this->_getLog()->err($this->_getOnCommentAddErrorMessage($message));
+    }
 }

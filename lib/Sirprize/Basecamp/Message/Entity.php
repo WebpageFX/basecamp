@@ -41,6 +41,7 @@ class Entity
     protected $_response = null;
     protected $_observers = array();
     protected $_attachments = array();
+    protected $_private = array();
 
     public function setService(Service $service)
     {
@@ -119,6 +120,12 @@ class Entity
         return $this->_getVal(self::_BODY);
     }
 
+    public function setBody($body)
+    {
+        $this->_data[self::_BODY] = $body;
+        return $this;
+    }
+
     public function getCreatedAt()
     {
         return $this->_getVal(self::_CREATED_AT);
@@ -139,6 +146,12 @@ class Entity
         return $this->_getVal(self::_PRIVATE);
     }
 
+    public function setPrivate($private)
+    {
+        $this->_private = $private;
+        return $this;
+    }
+
     public function getMilestoneId()
     {
         return $this->_getVal(self::_MILESTONE_ID);
@@ -154,9 +167,22 @@ class Entity
         return $this->_getVal(self::_TITLE);
     }
 
+    public function setTitle($title)
+    {
+        $this->_data[self::_TITLE] = $title;
+        return $this;
+    }
+
     public function getProjectId()
     {
         return $this->_getVal(self::_PROJECT_ID);
+    }
+
+
+    public function setProjectId(Id $ProjectId)
+    {
+        $this->_data[self::_PROJECT_ID] = $ProjectId;
+        return $this;
     }
 
     /**
@@ -228,6 +254,166 @@ class Entity
         return $this;
     }
 
+    /**
+     * Create XML to create a new message
+     *
+     * @throws \Sirprize\Basecamp\Exception
+     * @return string
+     */
+    public function getXml()
+    {
+        if($this->getTitle() === null)
+        {
+            throw new Exception('call setTitle() before '.__METHOD__);
+        }
+
+		$xml  = '<request>';
+		$xml .= '<post>';
+		$xml .= '<title>'.htmlspecialchars($this->getTitle(), ENT_NOQUOTES).'</title>';
+		$xml .= '<body>'.htmlspecialchars($this->getBody(), ENT_NOQUOTES).'</body>';
+		$xml .= '<private>'.($this->_private ? 1 : 0).'</private>';
+		$xml .= '<category-id />';
+		$xml .= '</post>';
+        $xml .= '</request>';
+        return $xml;
+    }
+
+    /**
+     * Persist this message in storage
+     *
+     * Note: complete data (id etc) is not automatically loaded upon creation
+     *
+     * @throws \Sirprize\Basecamp\Exception
+     * @return boolean
+     */
+    public function create($comment = false)
+    {
+        if($this->getProjectId() === null)
+        {
+            throw new Exception('set project-id before  '.__METHOD__);
+        }
+
+        $projectId = $this->getProjectId();
+
+        $xml = $this->getXml();
+
+        try {
+            $response = $this->_getHttpClient()
+                ->setUri($this->_getService()->getBaseUri()."/projects/$projectId/posts.xml")
+                ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                ->setHeaders('Content-type', 'application/xml')
+                ->setHeaders('Accept', 'application/xml')
+                ->setRawData($xml)
+                ->request('POST')
+            ;
+
+            if ($comment)
+            {
+
+                $attachments_xml = '';
+                if (count($this->_attachments) > 0) {
+
+                    foreach ($this->_attachments as $uploadId => $fname) {
+                        // Yes there are 2 file tags
+                        $attachments_xml .= '<attachments><file><original_filename>'.htmlspecialchars($fname).'</original_filename><file>'.$uploadId.'</file></file></attachments>';
+                    }
+                }
+
+                $xml2 = '<comment><body>' . htmlspecialchars($comment) . '</body>' . $attachments_xml . '</comment>';
+                $response2 = $this->_getHttpClient()
+                    ->setUri($response->getHeader('Location') . "/comments.xml")
+                    ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                    ->setHeaders('Content-type', 'application/xml')
+                    ->setHeaders('Accept', 'application/xml')
+                    ->setRawData($xml2)
+                    ->request('POST')
+                ;
+            }
+        }
+        catch(\Exception $exception)
+        {
+            try {
+                // connection error - try again
+                $response = $this->_getHttpClient()->request('POST');
+            }
+            catch(\Exception $exception)
+            {
+                $this->_onCreateError();
+
+                throw new Exception($exception->getMessage());
+            }
+        }
+        $this->_response = new Response($response);
+
+        if($this->_response->isError())
+        {
+            // service error
+            $this->_onCreateError();
+            return false;
+        }
+
+        $this->_onCreateSuccess();
+        return true;
+    }
+
+    /**
+     * Add a comment
+     *
+     * @throws \Sirprize\Basecamp\Exception
+     * @return boolean
+     */
+    public function addComment($comment)
+    {
+        if(!$this->_loaded)
+        {
+            throw new Exception('call load() before '.__METHOD__);
+        }
+        $attachments_xml = '';
+        if (count($this->_attachments) > 0) {
+
+            foreach ($this->_attachments as $uploadId => $fname) {
+                // Yes there are 2 file tags
+                $attachments_xml .= '<attachments><file><original_filename>'.htmlspecialchars($fname).'</original_filename><file>'.$uploadId.'</file></file></attachments>';
+            }
+        }
+        $xml = '<comment><body>' . htmlspecialchars($comment) . '</body>' . $attachments_xml . '</comment>';
+        $id = $this->getId();
+        try {
+                $response = $this->_getHttpClient()
+                    ->setUri($this->_getService()->getBaseUri() . "/posts/$id/comments.xml")
+                    ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                    ->setHeaders('Content-type', 'application/xml')
+                    ->setHeaders('Accept', 'application/xml')
+                    ->setRawData($xml)
+                    ->request('POST')
+                ;
+        }
+        catch(\Exception $exception)
+        {
+            try {
+                // connection error - try again
+                $response = $this->_getHttpClient()->request('PUT');
+            }
+            catch(\Exception $exception)
+            {
+                $this->_onCommentAddError();
+
+                throw new Exception($exception->getMessage());
+            }
+        }
+
+        $this->_response = new Response($response);
+
+        if($this->_response->isError())
+        {
+            // service error
+            $this->_onCommentAddError();
+            return false;
+        }
+
+        $this->_onCommentAddSuccess();
+        return true;
+    }
 
     /**
      * Gets recent comments
@@ -325,6 +511,40 @@ class Entity
         foreach($this->_observers as $observer)
         {
             $observer->onCommentsGetError($this);
+        }
+    }
+
+    protected function _onCommentAddError()
+    {
+        foreach($this->_observers as $observer)
+        {
+            $observer->onCommentAddError($this);
+        }
+    }
+
+
+    protected function _onCreateError()
+    {
+        foreach($this->_observers as $observer)
+        {
+            $observer->onCreateError($this);
+        }
+    }
+
+
+    protected function _onCommentAddSuccess()
+    {
+        foreach($this->_observers as $observer)
+        {
+            $observer->onCommentAddSuccess($this);
+        }
+    }
+
+    protected function _onCreateSuccess()
+    {
+        foreach($this->_observers as $observer)
+        {
+            $observer->onCreateSuccess($this);
         }
     }
 }

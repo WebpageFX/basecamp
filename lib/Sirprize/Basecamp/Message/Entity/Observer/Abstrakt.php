@@ -18,8 +18,11 @@ abstract class Abstrakt
 
     abstract public function onLoadSuccess($xmlstring);
     abstract public function onCommentsGetSuccess(Entity $message);
-
     abstract public function onCommentsGetError(Entity $message);
+	abstract public function onCommentAddSuccess(Entity $message);
+    abstract public function onCreateSuccess(Entity $message);
+    abstract public function onCommentAddError(Entity $message);
+    abstract public function onCreateError(Entity $message);
 
     protected function _getOnLoadSuccessMessage($xmlstring)
     {
@@ -41,4 +44,32 @@ abstract class Abstrakt
         return $msg;
     }
 
+    protected function _getOnCreateSuccessMessage(Entity $message)
+    {
+        $msg  = "message '".$message->getId()."'";
+        $msg .= " created in project '".$message->getProjectId()."'";
+        return $msg;
+    }
+
+    protected function _getOnCommentAddSuccessMessage(Entity $message)
+    {
+        $msg  = "message '".$message->getId()."'";
+        $msg .= " comment added in project '".$message->getId()."'";
+        return $msg;
+    }
+
+
+    protected function _getOnCreateErrorMessage(Entity $message)
+    {
+        $msg  = "message '".$message->getId()."'";
+        $msg .= " could not be created in project '".$message->getProjectId()."'";
+        return $msg;
+    }
+
+    protected function _getOnCommentAddErrorMessage(Entity $message)
+    {
+        $msg  = "message '".$message->getId()."'";
+        $msg .= " could not add comment for message '".$message->getId()."'";
+        return $msg;
+    }
 }

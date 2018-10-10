@@ -26,6 +26,7 @@ class Collection extends \SplObjectStorage
     const FIND_LATE = 'late';
     const FIND_ALL = 'all';
     const _MILESTONE = 'milestone';
+    const _CE = 'calendar-entry';
 
     protected $_service = null;
     protected $_httpClient = null;
@@ -168,12 +169,15 @@ class Collection extends \SplObjectStorage
                 ->setRawData($xml)
                 ->request('POST')
             ;
+            $this->_response = new Response($response);
         }
         catch(\Exception $exception)
         {
             try {
                 // connection error - try again
+                sleep(15);
                 $response = $this->_getHttpClient()->request('POST');
+                $this->_response = new Response($response);
             }
             catch(\Exception $exception)
             {
@@ -188,7 +192,6 @@ class Collection extends \SplObjectStorage
             }
         }
 
-        $this->_response = new Response($response);
 
         if($this->_response->isError())
         {
@@ -215,6 +218,58 @@ class Collection extends \SplObjectStorage
         $this->_started = true;
         $this->_onCreateSuccess();
         return $this->count();
+    }
+
+    /**
+     * Fetch milestone by id
+     *
+     * @throws \Sirprize\Basecamp\Exception
+     * @return null|Entity
+     */
+    public function startById(Id $id, $force = false)
+    {
+        if($this->_started && !$force)
+        {
+            return $this;
+        }
+
+        $this->_started = true;
+
+        try {
+            $response = $this->_getHttpClient()
+                ->setUri($this->_getService()->getBaseUri()."/calendar_entries/$id.xml")
+                ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                ->request('GET')
+            ;
+            $this->_response = new Response($response);
+        }
+        catch(\Exception $exception)
+        {
+            try {
+                // connection error - try again
+                sleep(15);
+                $response = $this->_getHttpClient()->request('GET');
+                $this->_response = new Response($response);
+            }
+            catch(\Exception $exception)
+            {
+                $this->_onStartError();
+
+                throw new Exception($exception->getMessage());
+            }
+        }
+        if($this->_response->isError())
+        {
+            // service error
+            $this->_onStartError();
+            return null;
+        }
+
+        $this->loadce($this->_response->getData(), $force);
+        $this->_onStartSuccess();
+        $this->rewind();
+
+        return $this->current();
     }
 
     /**
@@ -247,12 +302,15 @@ class Collection extends \SplObjectStorage
                 ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
                 ->request('GET')
             ;
+            $this->_response = new Response($response);
         }
         catch(\Exception $exception)
         {
             try {
                 // connection error - try again
+                sleep(15);
                 $response = $this->_getHttpClient()->request('GET');
+                $this->_response = new Response($response);
             }
             catch(\Exception $exception)
             {
@@ -263,7 +321,6 @@ class Collection extends \SplObjectStorage
             }
         }
 
-        $this->_response = new Response($response);
 
         if($this->_response->isError())
         {
@@ -308,6 +365,51 @@ class Collection extends \SplObjectStorage
         }
 
         foreach($array[self::_MILESTONE] as $row)
+        {
+            // list request - 2 or more items in response
+            $milestone = $this->getMilestoneInstance();
+            $milestone->load($row);
+            $this->attach($milestone);
+        }
+
+        return $this;
+    }
+
+    public function loadce(\SimpleXMLElement $xml)
+    {
+        if($this->_loaded)
+        {
+            throw new Exception('collection has already been loaded');
+        }
+
+        $this->_loaded = true;
+        $array = (array) $xml;
+
+        if(isset($xml->id))
+        {
+            // request for a single entity (not supported on todoItems)
+            $milestone = $this->getMilestoneInstance();
+            $milestone->load($xml);
+            $this->attach($milestone);
+            return $this;
+        }
+
+        if(!isset($array[self::_CE]))
+        {
+            // list request - 0 items in response
+            return $this;
+        }
+
+        if(isset($array[self::_CE]->id))
+        {
+            // list request - 1 item in response
+            $milestone = $this->getMilestoneInstance();
+            $milestone->load($array[self::_CE]);
+            $this->attach($milestone);
+            return $this;
+        }
+
+        foreach($array[self::_CE] as $row)
         {
             // list request - 2 or more items in response
             $milestone = $this->getMilestoneInstance();

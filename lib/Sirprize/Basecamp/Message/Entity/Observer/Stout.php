@@ -32,4 +32,24 @@ class Stout extends Abstrakt
 //        print $this->_getOnCommentsGetErrorMessage($message)."\n";
     }
 
+    public function onCreateSuccess(Entity $message)
+    {
+//        print $this->_getOnCreateSuccessMessage($message)."\n";
+    }
+
+    public function onCommentAddSuccess(Entity $message)
+    {
+//        print $this->_getOnCommentAddSuccessMessage($message)."\n";
+    }
+
+    public function onCreateError(Entity $message)
+    {
+//        print $this->_getOnCreateErrorMessage($message)."\n";
+    }
+
+    public function onCommentAddError(Entity $message)
+    {
+//        print $this->_getOnCommentAddErrorMessage($message)."\n";
+    }
+
 }

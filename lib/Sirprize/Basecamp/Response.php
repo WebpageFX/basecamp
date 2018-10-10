@@ -15,32 +15,41 @@ class Response
     protected $_data = null;
     protected $_error = null;
 
+
+    function warning_handler($errno, $errstr) {
+        throw new \Exception($errstr);
+    }
+
     public function __construct(\Zend_Http_Response $httpResponse)
     {
         $this->_httpResponse = $httpResponse;
 
-        /*
-        if(!$httpResponse->isError() && !preg_match('/^\s*$/', $httpResponse->getBody()))
-        {
-            $this->_data = simplexml_load_string($httpResponse->getBody());
-        }
-        */
+		if(!preg_match('/^\s*$/', $httpResponse->getBody()))
+		{
+			set_error_handler(array($this,'warning_handler'), E_WARNING);
+			try
+			{
+				$this->_data = simplexml_load_string($httpResponse->getBody());
+			}
+			catch(\Exception $e)
+			{
+				if(strpos($httpResponse->getBody(),'Oops, that isn&rsquo;t right.') === false)
+				{
+					throw new \Exception("Bad XML Basecamp Response:\n".$httpResponse->getBody());
+				}
+			}
+			restore_error_handler();
 
-        if(!preg_match('/^\s*$/', $httpResponse->getBody()))
-        {
-            #print $httpResponse->getBody(); exit;
-            $this->_data = simplexml_load_string($httpResponse->getBody());
+			if($httpResponse->isError())
+			{
+				$data = (array)$this->_data;
 
-            if($httpResponse->isError())
-            {
-                $data = (array)$this->_data;
-
-                if(isset($data['error']))
-                {
-                    $this->_error = $data['error'];
-                }
-            }
-        }
+				if(isset($data['error']))
+				{
+					$this->_error = $data['error'];
+				}
+			}
+		}
     }
 
     public function getHttpResponse()
