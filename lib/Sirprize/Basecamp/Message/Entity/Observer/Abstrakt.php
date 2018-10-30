@@ -23,6 +23,8 @@ abstract class Abstrakt
     abstract public function onCreateSuccess(Entity $message);
     abstract public function onCommentAddError(Entity $message);
     abstract public function onCreateError(Entity $message);
+    abstract public function onUpdateSuccess(Entity $todoItem);
+    abstract public function onUpdateError(Entity $todoItem);
 
     protected function _getOnLoadSuccessMessage($xmlstring)
     {
@@ -70,6 +72,35 @@ abstract class Abstrakt
     {
         $msg  = "message '".$message->getId()."'";
         $msg .= " could not add comment for message '".$message->getId()."'";
+        return $msg;
+    }
+
+    protected function _getOnUntagSuccessMessage(Entity $message)
+    {
+        $msg  = "message '".$message->getId()."'";
+        $msg .= " comment user untagged '".$message->getId()."'";
+        return $msg;
+    }
+
+
+    protected function _getOnUntagErrorMessage(Entity $message)
+    {
+        $msg  = "message '".$message->getId()."'";
+        $msg .= " could not untag user";
+        return $msg;
+    }
+
+    protected function _getOnUpdateSuccessMessage(Entity $message)
+    {
+        $msg  = "message '".$message->getId()."'";
+        $msg .= " updated in message '".$message->getId()."'";
+        return $msg;
+    }
+
+    protected function _getOnUpdateErrorMessage(Entity $message)
+    {
+        $msg  = "message '".$message->getId()."'";
+        $msg .= " could not be updated in message '".$message->getId()."'";
         return $msg;
     }
 }

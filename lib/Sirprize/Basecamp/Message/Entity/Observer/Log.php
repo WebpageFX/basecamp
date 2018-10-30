@@ -70,4 +70,24 @@ class Log extends Abstrakt
     {
         $this->_getLog()->err($this->_getOnCommentAddErrorMessage($message));
     }
+
+    public function onUntagSuccess(Entity $message)
+    {
+        $this->_getLog()->info($this->_getOnUntagSuccessMessage($message));
+    }
+
+    public function onUntagError(Entity $message)
+    {
+        $this->_getLog()->err($this->_getOnUntagErrorMessage($message));
+    }
+
+    public function onUpdateSuccess(Entity $message)
+    {
+        $this->_getLog()->info($this->_getOnUpdateSuccessMessage($message));
+    }
+
+    public function onUpdateError(Entity $message)
+    {
+        $this->_getLog()->err($this->_getOnUpdateErrorMessage($message));
+    }
 }

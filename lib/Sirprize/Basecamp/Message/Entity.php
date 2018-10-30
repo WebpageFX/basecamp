@@ -42,6 +42,8 @@ class Entity
     protected $_observers = array();
     protected $_attachments = array();
     protected $_private = array();
+    protected $_notify = false;
+    protected $_parties = array();
 
     public function setService(Service $service)
     {
@@ -185,6 +187,18 @@ class Entity
         return $this;
     }
 
+    public function setNotify($notify)
+    {
+        $this->_notify = $notify;
+        return $this;
+    }
+
+    public function setParties($parties)
+    {
+        $this->_parties = $parties;
+        return $this;
+    }
+
     /**
      * @return \Sirprize\Basecamp\Id
      */
@@ -256,6 +270,7 @@ class Entity
 
     /**
      * Create XML to create a new message
+     * use party 0 to untag all
      *
      * @throws \Sirprize\Basecamp\Exception
      * @return string
@@ -272,8 +287,12 @@ class Entity
 		$xml .= '<title>'.htmlspecialchars($this->getTitle(), ENT_NOQUOTES).'</title>';
 		$xml .= '<body>'.htmlspecialchars($this->getBody(), ENT_NOQUOTES).'</body>';
 		$xml .= '<private>'.($this->_private ? 1 : 0).'</private>';
-		$xml .= '<category-id />';
+        $xml .= '<category-id />';
+        $xml .= '<notify-about-changes>'.($this->_notify ? 1 : 0).'</notify-about-changes>';
 		$xml .= '</post>';
+        foreach($this->_parties as $party)
+            $xml .= '<notify>'.$party.'</notify>';
+
         $xml .= '</request>';
         return $xml;
     }
@@ -354,6 +373,88 @@ class Entity
 
         $this->_onCreateSuccess();
         return true;
+    }
+
+    /**
+     * Update this mesage in storage
+     *
+     * Note: complete data (id etc) is not automatically loaded upon update
+     *
+     * @throws \Sirprize\Basecamp\Exception
+     * @return boolean
+     */
+    public function update()
+    {
+        if(!$this->_loaded)
+        {
+            throw new Exception('call load() before '.__METHOD__);
+        }
+
+        $xml = $this->getXml();
+        $id = $this->getId();
+        try {
+            $response = $this->_getHttpClient()
+                ->setUri($this->_getService()->getBaseUri()."/posts/$id.xml")
+                ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                ->setHeaders('Content-type', 'application/xml')
+                ->setHeaders('Accept', 'application/xml')
+                ->setRawData($xml)
+                ->request('PUT')
+            ;
+        }
+        catch(\Exception $exception)
+        {
+            try {
+                // connection error - try again
+                $response = $this->_getHttpClient()->request('PUT');
+            }
+            catch(\Exception $exception)
+            {
+                $this->_onUpdateError();
+
+                throw new Exception($exception->getMessage());
+            }
+        }
+
+        $this->_response = new Response($response);
+
+        if($this->_response->isError())
+        {
+            // service error
+            $this->_onUpdateError();
+            return false;
+        }
+
+        $this->_onUpdateSuccess();
+        return true;
+    }
+
+    //gets tagged parties
+    public function getTaggedParties()
+    {
+        if(!$this->_loaded)
+        {
+            throw new Exception('call load() before '.__METHOD__);
+        }
+        $id = $this->getId();
+        try {
+                $response = $this->_getHttpClient()
+                    ->setUri($this->_getService()->getBaseUri() . "/posts/$id/edit")
+                    ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                    ->setHeaders('Content-type', NULL)
+                    ->setHeaders('Accept', NULL)
+                    ->request('GET')
+                ;
+                $body = $response->getBody();
+                $subscribers = $this->getContents($body,"  <input checked=\"checked\" id=\"notify-","\" name=\"notify[]\" type=\"checkbox\" value=\"");
+                return $subscribers;
+        }
+        catch(\Exception $e)
+        {
+//            \Zend\Debug\Debug::dump($e->getMessage());
+            throw new Exception($e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -465,6 +566,65 @@ class Entity
         return $this->_response->getData();
     }
 
+    public function untag()
+    {
+        $id = $this->getId();
+
+        try {
+            $response = $this->_getHttpClient()
+                ->setUri($this->_getService()->getBaseUri()."/posts/$id/subscription")
+                ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                ->setHeaders('Content-type', NULL)
+                ->setHeaders('Accept', NULL)
+                ->setRawData('_method=delete&authenticity_token=HgC9lHxH0P8rUitFhrgDRR9x9C%2BHkzNazyPc803ohpw%3D')
+                ->request('POST')
+            ;
+\Zend\Debug\Debug::dump($response);
+        }
+        catch(\Exception $exception)
+        {
+            try {
+                // connection error - try again
+                $response = $this->_getHttpClient()->request('POST');
+            }
+            catch(\Exception $exception)
+            {
+                $this->_onUntagError();
+
+                throw new Exception($exception->getMessage());
+            }
+        }
+
+        $this->_response = new Response($response);
+        if($this->_response->isError())
+        {
+            // service error
+            $this->_onUntagError();
+            return false;
+        }
+
+        $this->_onUntagSuccess();
+        return true;
+    }
+
+    private function getContents($str, $startDelimiter, $endDelimiter) {
+        $contents = array();
+        $startDelimiterLength = strlen($startDelimiter);
+        $endDelimiterLength = strlen($endDelimiter);
+        $startFrom = $contentStart = $contentEnd = 0;
+        while (false !== ($contentStart = strpos($str, $startDelimiter, $startFrom))) {
+            $contentStart += $startDelimiterLength;
+            $contentEnd = strpos($str, $endDelimiter, $contentStart);
+            if (false === $contentEnd) {
+                break;
+            }
+            $contents[] = substr($str, $contentStart, $contentEnd - $contentStart);
+            $startFrom = $contentEnd + $endDelimiterLength;
+        }
+
+        return $contents;
+    }
+
     protected function _getService()
     {
         if($this->_service === null)
@@ -545,6 +705,39 @@ class Entity
         foreach($this->_observers as $observer)
         {
             $observer->onCreateSuccess($this);
+        }
+    }
+
+    protected function _onUntagSuccess()
+    {
+        foreach($this->_observers as $observer)
+        {
+            $observer->onUntagSuccess($this);
+        }
+    }
+
+    protected function _onUntagError()
+    {
+        foreach($this->_observers as $observer)
+        {
+            $observer->onUntagError($this);
+        }
+    }
+
+
+    protected function _onUpdateSuccess()
+    {
+        foreach($this->_observers as $observer)
+        {
+            $observer->onUpdateSuccess($this);
+        }
+    }
+
+    protected function _onUpdateError()
+    {
+        foreach($this->_observers as $observer)
+        {
+            $observer->onUpdateError($this);
         }
     }
 }

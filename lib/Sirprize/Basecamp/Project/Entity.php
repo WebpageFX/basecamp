@@ -14,6 +14,8 @@ use Sirprize\Basecamp\Service;
 use Sirprize\Basecamp\Exception;
 use Sirprize\Basecamp\Schema;
 use Sirprize\Basecamp\Schema\Export;
+use Sirprize\Basecamp\Response;
+use Sirprize\Basecamp\Message\Entity\Observer\Abstrakt;
 
 /**
  * Represent and modify a project
@@ -102,6 +104,18 @@ class Entity
     public function getShowAnnouncement()
     {
         return $this->_getVal(self::_SHOW_ANNOUNCEMENT);
+    }
+
+    public function setShowAnnouncement($showAnnouncement)
+    {
+        $this->_data[self::_SHOW_ANNOUNCEMENT] = $showAnnouncement;
+        return $this;
+    }
+
+    public function setAnnouncement($announcement)
+    {
+        $this->_data[self::_ANNOUNCEMENT] = $announcement;
+        return $this;
     }
 
     public function getShowWriteboards()
@@ -226,6 +240,81 @@ class Entity
         );
 
         return $this;
+    }
+
+    /**
+     * Create XML for project update
+     *
+     * @throws \Sirprize\Basecamp\Exception
+     * @return string
+     */
+    public function getXml()
+    {
+        if($this->getId() === null)
+        {
+            throw new Exception('call setContent() before '.__METHOD__);
+        }
+
+		$xml  = '<project>';
+        $xml .= '<announcement>'.htmlspecialchars($this->getAnnouncement(), ENT_NOQUOTES).'</announcement>';
+        $xml .= '<show-announcement>'.(($this->getShowAnnouncement()) ? 'true' : 'false').'</show-announcement>';
+
+
+        $xml .= '</project>';
+        return $xml;
+    }
+
+    /**
+     * Update this project in storage
+     *
+     * Note: complete data (id etc) is not automatically loaded upon update
+     *
+     * @throws \Sirprize\Basecamp\Exception
+     * @return boolean
+     */
+    public function update()
+    {
+        if(!$this->_loaded)
+        {
+            throw new Exception('call load() before '.__METHOD__);
+        }
+
+        $xml = $this->getXml();
+        $id = $this->getId();
+//\Zend\Debug\Debug::dump($this->_getService()->getBaseUri()."/projects/$id.xml");
+//\Zend\Debug\Debug::dump($xml);
+        try {
+            $response = $this->_getHttpClient()
+                ->setUri($this->_getService()->getBaseUri()."/projects/$id.xml")
+                ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                ->setHeaders('Content-type', 'application/xml')
+                ->setHeaders('Accept', 'application/xml')
+                ->setRawData($xml)
+                ->request('PUT')
+            ;
+        }
+        catch(\Exception $exception)
+        {
+            try {
+                // connection error - try again
+                $response = $this->_getHttpClient()->request('PUT');
+            }
+            catch(\Exception $exception)
+            {
+
+                throw new Exception($exception->getMessage());
+            }
+        }
+
+        $this->_response = new Response($response);
+
+        if($this->_response->isError())
+        {
+            // service error
+            return false;
+        }
+
+        return true;
     }
 
     public function copy(Id $targetProjectId)
