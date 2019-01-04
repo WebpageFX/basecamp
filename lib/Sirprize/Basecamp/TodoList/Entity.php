@@ -566,8 +566,6 @@ class Entity
             }
             catch(\Exception $exception)
             {
-                $this->_onCreateError();
-
                 throw new Exception($exception->getMessage());
             }
         }
@@ -577,17 +575,68 @@ class Entity
         if($this->_response->isError())
         {
             // service error
-            $this->_onCreateError();
+            \Zend\Debug\Debug::dump($response);
             return false;
         }
 
         $this->_loaded = true;
-        $this->_onUpdateSuccess();
         return true;
     }
 
 
 // REORDER
+
+    /**
+     * Move List
+     *
+     * @throws \Sirprize\Basecamp\Exception
+     * @return boolean
+     */
+    public function moveList($destination)
+    {
+        if(!$this->_loaded)
+        {
+            throw new Exception('call load() before '.__METHOD__);
+        }
+
+        $id = $this->getId();
+        try {
+            $raw = 'utf8=%E2%9C%93&authenticity_token=e75hPdlMOh%2FU16dzQ9S5d424u4p8YST08%2FInf9TBydU%3D';
+            $raw .= '&move_operation%5Bsource_resource_type%5D=TodoList&move_operation%5Bsource_resource_id%5D='.
+                $id->get().
+                '&move_operation%5Bdestination_project_id%5D='.
+                $destination.
+                '&commit=Move+this+to-do+list';
+//                \Zend\Debug\Debug::dump($raw);
+//            $this->setHttpClient(new \Zend_Http_Client(null,array('timeout'=>30)));
+            $response = $this->_getHttpClient()
+                ->setUri($this->_getService()->getBaseUri() . "/move_operations")
+                ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                ->setRawData($raw)
+                ->setHeaders(array(
+'Cookie: session_token=82879374cc9a535327cb; flashVersion=; wcsid=KjCZtJvnWznOuxpm2u7J40UR3N9Aoavj; hblid=u82b2h7k2jLsdLbc2u7J40UNaRbbjkv3; _okdetect=%7B%22token%22%3A%2215460075144980%22%2C%22proto%22%3A%22https%3A%22%2C%22host%22%3A%22webpagefx.basecamphq.com%22%7D; olfsk=olfsk2896615709396291; _okbk=cd4%3Dtrue%2Cvi5%3D0%2Cvi4%3D1546007514746%2Cvi3%3Dactive%2Cvi2%3Dfalse%2Cvi1%3Dfalse%2Ccd8%3Dchat%2Ccd6%3D0%2Ccd5%3Daway%2Ccd3%3Dfalse%2Ccd2%3D0%2Ccd1%3D0%2C; _ok=3808-668-10-7562; noOlark=true; twisted_token=22bec94daee7789856117b2230bcee3bdcc3; _basecamp_session_v2=BAh7C0kiD3Nlc3Npb25faWQGOgZFRiIlMTg3ODdiNmM2MmM3ODI4ZTk5MmJkZTdlMDc3NzA3MzRJIgx1c2VyX2lkBjsARmkD%2BeusSSIQaWRlbnRpdHlfaWQGOwBGaQO%2F2Y1JIh1tZXNhdXJlX3BhZ2VfcGVyZm9ybWFuY2UGOwBGRkkiEF9jc3JmX3Rva2VuBjsARkkiMWU3NWhQZGxNT2gvVTE2ZHpROVM1ZDQyNHU0cDhZU1QwOC9JbmY5VEJ5ZFU9BjsARkkiCmZsYXNoBjsARklDOiVBY3Rpb25EaXNwYXRjaDo6Rmxhc2g6OkZsYXNoSGFzaHsHOhRzaWdudXBfY29tcGxldGVGOhJyc3ZwX2NvbXBsZXRlRgY6CkB1c2VkbzoIU2V0BjoKQGhhc2h7BzsHVDsIVA%3D%3D--97762fa0834b9b060844575a185f0928950a1430; return_to=https%3A%2F%2Fwebpagefx.basecamphq.com%2Fprojects%2F14369343-r-d-test-2-adrian%2Fposts; _oklv=1546008714671%2CKjCZtJvnWznOuxpm2u7J40UR3N9Aoavj'
+                ))
+                ->request('POST')
+                ;
+            if($response->getMessage() == 'OK')
+            {
+                $this->setProjectId(new Id($destination));
+                return true;
+            }
+            else
+            {
+//                \Zend\Debug\Debug::dump($response);
+                throw new Exception($response->getMessage());
+                return false;
+            }
+        }
+        catch(\Exception $exception)
+        {
+            throw new Exception($exception->getMessage());
+            return false;
+        }
+    }
+
 
     protected function _getService()
     {

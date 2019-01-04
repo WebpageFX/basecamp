@@ -607,6 +607,55 @@ class Entity
         return true;
     }
 
+    /**
+     * Delete this post from storage
+     *
+     * @throws \Sirprize\Basecamp\Exception
+     * @return boolean
+     */
+    public function delete()
+    {
+        $id = $this->getId();
+
+        try {
+            $response = $this->_getHttpClient()
+                ->setUri($this->_getService()->getBaseUri()."/posts/$id.xml")
+                ->setAuth($this->_getService()->getUsername(), $this->_getService()->getPassword())
+                ->setHeaders('Content-type', 'application/xml')
+                ->setHeaders('Accept', 'application/xml')
+                ->request('DELETE')
+            ;
+        }
+        catch(\Exception $exception)
+        {
+            try {
+                // connection error - try again
+                $response = $this->_getHttpClient()->request('DELETE');
+            }
+            catch(\Exception $exception)
+            {
+//                $this->_onDeleteError();
+
+                throw new Exception($exception->getMessage());
+            }
+        }
+
+        $this->_response = new Response($response);
+
+        if($this->_response->isError())
+        {
+            // service error
+//            $this->_onDeleteError();
+            return false;
+        }
+
+//        $this->_onDeleteSuccess();
+        $this->_data = array();
+        $this->_loaded = false;
+        return true;
+    }
+
+
     private function getContents($str, $startDelimiter, $endDelimiter) {
         $contents = array();
         $startDelimiterLength = strlen($startDelimiter);

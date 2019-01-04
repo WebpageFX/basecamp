@@ -280,7 +280,10 @@ class Collection extends \SplObjectStorage
 
         $data = $this->_response->getData();
         $array_data = (array) $data;
-        $id = new Id($array_data['commentable-id']);
+        if(isset($array_data['commentable-id']))
+            $id = new Id($array_data['commentable-id']);
+        else
+            return null;
 
         if($this->_response->isError())
         {
